@@ -272,6 +272,39 @@
         z-index: 1000;
         display: none;
       }
+
+      /* GitHub链接图标样式 */
+      .github-link {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 1000;
+        opacity: 0.7;
+        transition: opacity 0.3s ease;
+      }
+
+      .github-link:hover {
+        opacity: 1;
+      }
+
+      .github-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      }
+
+      @media (max-width: 768px) {
+        .github-link {
+          bottom: 10px;
+          right: 10px;
+        }
+
+        .github-icon {
+          width: 24px;
+          height: 24px;
+        }
+      }
     </style>
   </head>
   <body>
@@ -325,6 +358,20 @@
       <div id="subscribeLink"></div>
       <div id="instructions"></div>
     </div>
+
+    <!-- 添加GitHub仓库链接图标 -->
+    <a
+      href="https://github.com/qiaoborui/calendar"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="github-link"
+    >
+      <img
+        src="https://github.com/favicon.ico"
+        alt="GitHub"
+        class="github-icon"
+      />
+    </a>
 
     <div id="customAlert" class="custom-alert">
       <div class="alert-content">
