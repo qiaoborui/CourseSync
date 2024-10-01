@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>课表日历订阅</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: KaiTi, "楷体", STKaiti, "华文楷体", SimKai, "仿宋", SimSun,
+          sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+      .container {
+        max-width: 100%;
+        margin: 0 auto;
+        background-color: rgba(255, 255, 255, 0.9);
+        border-radius: 20px;
+        box-shadow: 0 0 30px rgba(0, 0, 0, 0.1);
+        padding: 15px;
+      }
+      h1 {
+        text-align: center;
+        color: #2c3e50;
+        margin-bottom: 15px;
+        font-size: 2em;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .preview-container {
+        display: flex;
+        overflow-x: auto;
+        gap: 10px;
+        padding: 10px 0;
+        margin-bottom: 20px;
+      }
+      .preview-item {
+        flex: 0 0 auto;
+        width: 140px;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+      }
+      .preview-item:hover {
+        transform: scale(1.05);
+      }
+      .preview-image {
+        width: 100%;
+        height: auto;
+        display: block;
+      }
+      .watch-container {
+        display: flex;
+        flex-direction: column;
+        width: 120px; /* 减小宽度 */
+      }
+      .watch-image {
+        width: 100%;
+        height: auto; /* 自动计算高度以保持宽高比 */
+        aspect-ratio: 416 / 496; /* 设置宽高比 */
+        object-fit: cover; /* 确保图片填充容器 */
+        margin-bottom: 5px; /* 在两张图片之间添加一些间距 */
+      }
+      .preview-description {
+        text-align: center;
+        margin-bottom: 20px;
+        font-size: 1em;
+        color: #34495e;
+      }
+      form {
+        display: flex;
+        flex-direction: column;
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+      }
+      label {
+        margin-top: 15px;
+        font-weight: bold;
+        color: #34495e;
+        font-size: 1em;
+      }
+      input {
+        padding: 10px;
+        margin-top: 5px;
+        border: 2px solid #bdc3c7;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: border-color 0.3s ease;
+        font-family: inherit;
+      }
+      input:focus {
+        border-color: #3498db;
+        outline: none;
+      }
+      button {
+        margin-top: 25px;
+        padding: 12px;
+        background-color: #3498db;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1.1em;
+        transition: background-color 0.3s, transform 0.1s;
+        font-family: inherit;
+      }
+      button:hover {
+        background-color: #2980b9;
+        transform: translateY(-2px);
+      }
+      button:active {
+        transform: translateY(0);
+      }
+      #subscribeLink,
+      #instructions {
+        margin-top: 30px;
+        text-align: center;
+      }
+      .link-option {
+        margin-top: 15px;
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+      }
+      .link-option a {
+        color: #3498db;
+        text-decoration: none;
+        font-weight: bold;
+        font-size: 1.1em;
+      }
+      .link-option a:hover {
+        text-decoration: underline;
+      }
+      textarea {
+        width: 100%;
+        height: 60px;
+        padding: 10px;
+        margin-top: 10px;
+        border: 2px solid #bdc3c7;
+        border-radius: 8px;
+        font-size: 14px;
+        resize: none;
+        font-family: inherit;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>课表日历订阅</h1>
+
+      <div class="preview-container">
+        <div class="preview-item watch-container">
+          <img
+            src="/assets/watch.png"
+            alt="Apple Watch预览图1"
+            class="preview-image watch-image"
+          />
+          <img
+            src="/assets/watch2.png"
+            alt="Apple Watch预览图2"
+            class="preview-image watch-image"
+          />
+        </div>
+        <div class="preview-item">
+          <img
+            src="/assets/preview2.png"
+            alt="手机预览图2"
+            class="preview-image"
+          />
+        </div>
+        <div class="preview-item">
+          <img
+            src="/assets/preview.jpeg"
+            alt="手机预览图1"
+            class="preview-image"
+          />
+        </div>
+      </div>
+
+      <p class="preview-description">
+        轻松订阅您的课表日历，随时随地查看课程安排。支持多种设备，包括手机和Apple
+        Watch，让您的学习生活更有条理。
+      </p>
+
+      <form id="subscriptionForm">
+        <label for="username">用户名:</label>
+        <input type="text" id="username" required />
+
+        <label for="password">密码:</label>
+        <input type="password" id="password" required />
+
+        <button type="submit">点击订阅</button>
+      </form>
+
+      <div id="subscribeLink"></div>
+      <div id="instructions"></div>
+    </div>
+
+    <script>
+      document
+        .getElementById("subscriptionForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+
+          const username = document.getElementById("username").value;
+          const password = document.getElementById("password").value;
+
+          const baseUrl =
+            "table-class-table-gbgdkdbzha.cn-hangzhou.fcapp.run/class";
+          const subscriptionUrl = `webcal://${baseUrl}?username=${encodeURIComponent(
+            username
+          )}&passwd=${encodeURIComponent(password)}`;
+
+          const linkContainer = document.getElementById("subscribeLink");
+          linkContainer.innerHTML = `
+                <div class="link-option">
+                    <a href="${subscriptionUrl}">点击此处订阅课表日历</a>
+                </div>
+                <div class="link-option">
+                    <p>如果链接无法打开，请复制以下地址：</p>
+                    <textarea readonly>${subscriptionUrl}</textarea>
+                </div>
+            `;
+
+          const instructionsContainer = document.getElementById("instructions");
+          instructionsContainer.innerHTML = `
+                <h3>使用说明：</h3>
+                <ol>
+                    <li>点击上方链接或复制地址到日历应用</li>
+                    <li>iOS设备推荐使用Safari浏览器打开链接</li>
+                    <li>某些日历应用可能需要手动添加订阅</li>
+                    <li>订阅成功后，您可以在手机和Apple Watch上查看课表</li>
+                </ol>
+            `;
+        });
+      window.addEventListener("load", function () {
+        const previewContainer = document.querySelector(".preview-container");
+        const middleItem = previewContainer.children[1];
+        previewContainer.scrollLeft =
+          middleItem.offsetLeft -
+          (previewContainer.clientWidth - middleItem.clientWidth) / 2;
+      });
+    </script>
+  </body>
+</html>
