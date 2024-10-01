@@ -242,6 +242,22 @@
           height: 50px;
         }
       }
+
+      /* 添加以下样式 */
+      input,
+      textarea,
+      select {
+        font-size: 16px; /* 防止 iOS 缩放 */
+        max-width: 100%; /* 确保输入框不会超出容器 */
+      }
+
+      @media screen and (-webkit-min-device-pixel-ratio: 0) {
+        select,
+        textarea,
+        input {
+          font-size: 16px;
+        }
+      }
     </style>
   </head>
   <body>
@@ -393,7 +409,38 @@
         }
       });
 
-      // ... 保留原有的 window.addEventListener 代码 ...
+      // 添加以下代码
+      document.addEventListener(
+        "touchstart",
+        function (event) {
+          if (event.touches.length > 1) {
+            event.preventDefault(); // 防止多点触控（例如捏合缩放）
+          }
+        },
+        { passive: false }
+      );
+
+      document.addEventListener(
+        "gesturestart",
+        function (event) {
+          event.preventDefault(); // 防止所有手势事件（包括缩放）
+        },
+        { passive: false }
+      );
+
+      // 可选：如果你想完全禁用双击缩放
+      let lastTouchEnd = 0;
+      document.addEventListener(
+        "touchend",
+        function (event) {
+          const now = new Date().getTime();
+          if (now - lastTouchEnd <= 300) {
+            event.preventDefault();
+          }
+          lastTouchEnd = now;
+        },
+        false
+      );
     </script>
   </body>
 </html>
