@@ -4,6 +4,20 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>课表日历订阅</title>
+    <!-- Google tag (gtag.js) -->
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-3KBPBEJ312"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+
+      gtag("config", "G-3KBPBEJ312");
+    </script>
     <style>
       * {
         box-sizing: border-box;
@@ -20,7 +34,8 @@
         padding: 20px;
       }
       .container {
-        max-width: 100%;
+        max-width: 450px; /* 限制最大宽度 */
+        width: 100%; /* 确保在小屏幕上占满宽度 */
         margin: 0 auto;
         background-color: rgba(255, 255, 255, 0.9);
         border-radius: 20px;
@@ -215,6 +230,13 @@
           const username = document.getElementById("username").value;
           const password = document.getElementById("password").value;
 
+          // 发送表单提交事件到 Google Analytics username
+          gtag("event", "form_submission", {
+            event_category: "engagement",
+            event_label: "subscription_form",
+            username: username,
+          });
+
           const baseUrl =
             "table-class-table-gbgdkdbzha.cn-hangzhou.fcapp.run/class";
           const subscriptionUrl = `webcal://${baseUrl}?username=${encodeURIComponent(
@@ -243,6 +265,7 @@
                 </ol>
             `;
         });
+
       window.addEventListener("load", function () {
         const previewContainer = document.querySelector(".preview-container");
         const middleItem = previewContainer.children[1];
