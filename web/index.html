@@ -258,6 +258,20 @@
           font-size: 16px;
         }
       }
+
+      /* 添加新的样式 */
+      .browser-alert {
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        background-color: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 10px;
+        border-radius: 5px;
+        font-size: 14px;
+        z-index: 1000;
+        display: none;
+      }
     </style>
   </head>
   <body>
@@ -318,6 +332,11 @@
         <textarea id="alertLink" readonly></textarea>
         <button id="closeAlert">关闭</button>
       </div>
+    </div>
+
+    <!-- 添加提示元素 -->
+    <div id="browserAlert" class="browser-alert">
+      请使用系统自带的浏览器打开以获得最佳体验
     </div>
 
     <script>
@@ -407,6 +426,34 @@
         } else {
           console.error("Close alert button not found"); // 错误信息
         }
+
+        // 添加检测浏览器的函数
+        function detectBrowser() {
+          const ua = navigator.userAgent.toLowerCase();
+          if (ua.match(/MicroMessenger/i) == "micromessenger") {
+            return "WeChat";
+          } else if (ua.match(/QQ/i) == "qq") {
+            return "QQ";
+          }
+          return "Other";
+        }
+
+        // 显示浏览器提示
+        function showBrowserAlert() {
+          const browser = detectBrowser();
+          if (browser === "WeChat" || browser === "QQ") {
+            document.getElementById("browserAlert").style.display = "block";
+
+            // 发送事件到 Google Analytics
+            gtag("event", "browser_alert", {
+              event_category: "user_experience",
+              event_label: browser,
+            });
+          }
+        }
+
+        // 调用显示浏览器提示的函数
+        showBrowserAlert();
       });
 
       // 添加以下代码
