@@ -167,6 +167,60 @@
         resize: none;
         font-family: inherit;
       }
+      .custom-alert {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+      }
+
+      .alert-content {
+        background-color: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+        max-width: 80%;
+        width: 400px;
+      }
+
+      .alert-content p {
+        margin-bottom: 15px;
+        font-size: 16px;
+        color: #333;
+      }
+
+      .alert-content textarea {
+        width: 100%;
+        height: 60px;
+        margin-bottom: 15px;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 14px;
+        resize: none;
+      }
+
+      .alert-content button {
+        width: 100%;
+        padding: 10px;
+        background-color: #3498db;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background-color 0.3s;
+      }
+
+      .alert-content button:hover {
+        background-color: #2980b9;
+      }
     </style>
   </head>
   <body>
@@ -221,58 +275,81 @@
       <div id="instructions"></div>
     </div>
 
+    <div id="customAlert" class="custom-alert">
+      <div class="alert-content">
+        <p id="alertMessage"></p>
+        <textarea id="alertLink" readonly></textarea>
+        <button id="closeAlert">关闭</button>
+      </div>
+    </div>
+
     <script>
-      document
-        .getElementById("subscriptionForm")
-        .addEventListener("submit", function (e) {
-          e.preventDefault();
+      let clickCount = 0;
+      const maxClicks = 3;
 
-          const username = document.getElementById("username").value;
-          const password = document.getElementById("password").value;
+      function showCustomAlert(message, link) {
+        console.log("Showing custom alert"); // 调试信息
+        document.getElementById("alertMessage").textContent = message;
+        document.getElementById("alertLink").value = link;
+        document.getElementById("customAlert").style.display = "flex";
+      }
 
-          // 发送表单提交事件到 Google Analytics username
-          gtag("event", "form_submission", {
-            event_category: "engagement",
-            event_label: "subscription_form",
-            username: username,
+      function closeCustomAlert() {
+        console.log("Closing custom alert"); // 调试信息
+        document.getElementById("customAlert").style.display = "none";
+      }
+
+      document.addEventListener("DOMContentLoaded", function () {
+        console.log("DOM fully loaded"); // 调试信息
+
+        const subscriptionForm = document.getElementById("subscriptionForm");
+        const closeAlertButton = document.getElementById("closeAlert");
+
+        if (subscriptionForm) {
+          subscriptionForm.addEventListener("submit", function (e) {
+            e.preventDefault();
+            console.log("Form submitted"); // 调试信息
+
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+
+            // 发送表单提交事件到 Google Analytics username
+            gtag("event", "form_submission", {
+              event_category: "engagement",
+              event_label: "subscription_form",
+              username: username,
+            });
+
+            const baseUrl =
+              "table-class-table-gbgdkdbzha.cn-hangzhou.fcapp.run/class";
+            const subscriptionUrl = `webcal://${baseUrl}?username=${encodeURIComponent(
+              username
+            )}&passwd=${encodeURIComponent(password)}`;
+
+            clickCount++;
+            console.log("Click count:", clickCount); // 调试信息
+
+            if (clickCount <= maxClicks) {
+              window.location.href = subscriptionUrl;
+            } else {
+              showCustomAlert(
+                "如果无法打开日历应用，请尝试手动复制以下链接并在浏览器中打开：",
+                subscriptionUrl
+              );
+            }
           });
+        } else {
+          console.error("Subscription form not found"); // 错误信息
+        }
 
-          const baseUrl =
-            "table-class-table-gbgdkdbzha.cn-hangzhou.fcapp.run/class";
-          const subscriptionUrl = `webcal://${baseUrl}?username=${encodeURIComponent(
-            username
-          )}&passwd=${encodeURIComponent(password)}`;
-
-          const linkContainer = document.getElementById("subscribeLink");
-          linkContainer.innerHTML = `
-                <div class="link-option">
-                    <a href="${subscriptionUrl}">点击此处订阅课表日历</a>
-                </div>
-                <div class="link-option">
-                    <p>如果链接无法打开，请复制以下地址：</p>
-                    <textarea readonly>${subscriptionUrl}</textarea>
-                </div>
-            `;
-
-          const instructionsContainer = document.getElementById("instructions");
-          instructionsContainer.innerHTML = `
-                <h3>使用说明：</h3>
-                <ol>
-                    <li>点击上方链接或复制地址到日历应用</li>
-                    <li>iOS设备推荐使用Safari浏览器打开链接</li>
-                    <li>某些日历应用可能需要手动添加订阅</li>
-                    <li>订阅成功后，您可以在手机和Apple Watch上查看课表</li>
-                </ol>
-            `;
-        });
-
-      window.addEventListener("load", function () {
-        const previewContainer = document.querySelector(".preview-container");
-        const middleItem = previewContainer.children[1];
-        previewContainer.scrollLeft =
-          middleItem.offsetLeft -
-          (previewContainer.clientWidth - middleItem.clientWidth) / 2;
+        if (closeAlertButton) {
+          closeAlertButton.addEventListener("click", closeCustomAlert);
+        } else {
+          console.error("Close alert button not found"); // 错误信息
+        }
       });
+
+      // ... 保留原有的 window.addEventListener 代码 ...
     </script>
   </body>
 </html>
