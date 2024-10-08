@@ -262,13 +262,28 @@
       /* 添加新的样式 */
       .browser-alert {
         position: fixed;
-        top: 10px;
-        right: 10px;
-        background-color: rgba(0, 0, 0, 0.7);
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: rgba(0, 0, 0, 0.8);
         color: white;
-        padding: 10px;
-        border-radius: 5px;
-        font-size: 14px;
+        padding: 20px;
+        border-radius: 10px;
+        font-size: 16px;
+        z-index: 1001;
+        display: none;
+        text-align: center;
+        max-width: 80%;
+      }
+
+      /* 添加背景蒙版样式 */
+      .overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
         z-index: 1000;
         display: none;
       }
@@ -381,7 +396,10 @@
       </div>
     </div>
 
-    <!-- 添加提示元素 -->
+    <!-- 添加背景蒙版元素 -->
+    <div id="overlay" class="overlay"></div>
+
+    <!-- 修改提示元素 -->
     <div id="browserAlert" class="browser-alert">
       请使用系统自带的浏览器打开以获得最佳体验
     </div>
@@ -485,10 +503,11 @@
           return "Other";
         }
 
-        // 显示浏览器提示
+        // 修改显示浏览器提示函数
         function showBrowserAlert() {
           const browser = detectBrowser();
           if (browser === "WeChat" || browser === "QQ") {
+            document.getElementById("overlay").style.display = "block";
             document.getElementById("browserAlert").style.display = "block";
 
             // 发送事件到 Google Analytics
@@ -499,8 +518,22 @@
           }
         }
 
+        // 添加关闭提示的函数
+        function closeBrowserAlert() {
+          document.getElementById("overlay").style.display = "none";
+          document.getElementById("browserAlert").style.display = "none";
+        }
+
         // 调用显示浏览器提示的函数
         showBrowserAlert();
+
+        // 添加点击事件监听器来关闭提示
+        document
+          .getElementById("overlay")
+          .addEventListener("click", closeBrowserAlert);
+        document
+          .getElementById("browserAlert")
+          .addEventListener("click", closeBrowserAlert);
       });
 
       // 添加以下代码
