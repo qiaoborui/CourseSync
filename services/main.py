@@ -4,80 +4,80 @@ from datetime import datetime, timedelta
 import hashlib
 import re
 from bs4 import BeautifulSoup
-from icalendar import Calendar, Event, Alarm
+from icalendar import Calendar, Event, Alarm, vDatetime
 from flask import Flask, request, Response
 
-class JwcClass:
+class AcademicSystemClient:
     BASE_URL = "https://swjw.xauat.edu.cn/student"
 
-    def __init__(self, username, passwd):
+    def __init__(self, username, password):
         self.username = username
-        self.passwd = passwd
+        self.password = password
         self.session = requests.Session()
-        self.status = self.login()
-        self.semester = self.get_semester() if self.status else None
-        self.class_list = []
-        self.exam_list = []
+        self.is_authenticated = self.authenticate()
+        self.current_semester = self.fetch_current_semester() if self.is_authenticated else None
+        self.courses = []
+        self.exams = []
 
-    def get_semester(self):
-        resp = self.session.get(f"{self.BASE_URL}/for-std/course-table").text
-        match = re.search('selected" value="(.*?)"', resp)
-        return match.group(1) if match else None
-
-    def login(self):
+    def authenticate(self):
         salt = self.session.get(f"{self.BASE_URL}/login-salt").text
-        enc_passwd = hashlib.sha1(f"{salt}-{self.passwd}".encode('utf-8')).hexdigest()
+        enc_passwd = hashlib.sha1(f"{salt}-{self.password}".encode('utf-8')).hexdigest()
         payload = {'username': self.username, 'password': enc_passwd, 'captcha': 'false'}
         resp = self.session.post(f"{self.BASE_URL}/login", json=payload)
         return resp.json().get('result', False)
 
-    def get_class(self):
-        if not self.status or not self.semester:
+    def fetch_current_semester(self):
+        resp = self.session.get(f"{self.BASE_URL}/for-std/course-table").text
+        match = re.search('selected" value="(.*?)"', resp)
+        return match.group(1) if match else None
+
+    def fetch_courses(self):
+        if not self.is_authenticated or not self.current_semester:
             return False
-        url = f'{self.BASE_URL}/for-std/course-table/get-data?bizTypeId=2&semesterId={self.semester}&dataId='
+        url = f'{self.BASE_URL}/for-std/course-table/get-data?bizTypeId=2&semesterId={self.current_semester}&dataId='
         try:
             resp = self.session.get(url).json()
-            self.class_list = resp['lessonIds']
+            self.courses = resp['lessonIds']
             return True
         except Exception as e:
-            print(f"获取课程清单失败: {e}")
+            print(f"Failed to fetch course list: {e}")
             return False
 
-    def get_exam(self):
+    def fetch_exams(self):
         url = f"{self.BASE_URL}/for-std/exam-arrange"
         try:
             resp = self.session.get(url).text
             soup = BeautifulSoup(resp, 'html.parser')
             table = soup.find('table', id='exams')
+            self.exams = []
             for row in table.find_all('tr')[1:]:
                 cols = row.find_all('td')
                 course = cols[0].text.strip()
                 time = cols[1].text.strip()
-                self.exam_list.append({'course': course, 'time': time})
+                self.exams.append({'course': course, 'time': time})
             return True
         except Exception as e:
-            print(f"获取考试安排失败: {e}")
+            print(f"Failed to fetch exam schedule: {e}")
             return False
 
-    def process_exam(self):
-        self.get_exam()
-        for exam in self.exam_list:
+    def process_exam_data(self):
+        for exam in self.exams:
             date, time_range = exam['time'].split(' ')
             start, end = time_range.split('~')
             exam['start'] = datetime.strptime(f"{date} {start}", '%Y-%m-%d %H:%M')
             exam['end'] = datetime.strptime(f"{date} {end}", '%Y-%m-%d %H:%M')
 
-    def get_detail(self):
-        if not self.class_list:
+    def fetch_course_details(self):
+        if not self.courses:
             return None
         url = f"{self.BASE_URL}/ws/schedule-table/datum"
-        resp = self.session.post(url, json={"studentId": "null", 'lessonIds': self.class_list})
+        resp = self.session.post(url, json={"studentId": "null", 'lessonIds': self.courses})
         return resp.json().get('result')
 
-    def edit_data(self):
-        if not self.get_class():
+    def process_course_data(self):
+        if not self.fetch_courses():
             return []
-        data = self.get_detail()
+        data = self.fetch_course_details()
         if not data:
             return []
         
@@ -86,17 +86,16 @@ class JwcClass:
         for schedule in data['scheduleList']:
             schedule_info = {
                 'lessonId': schedule['lessonId'],
-                'courseName': course_dict.get(schedule['lessonId'], "未知课程"),
-                'personName': schedule.get('personName', "未知教师"),
-                'roomZh': "神秘的角落",
+                'courseName': course_dict.get(schedule['lessonId'], "Unknown Course"),
+                'personName': schedule.get('personName', "Unknown Teacher"),
+                'roomZh': "Mystery Corner",
                 'date': schedule['date'],
                 'startTime': schedule['startTime'],
                 'endTime': schedule['endTime']
             }
             
-            # 安全地获取教室信息
             if isinstance(schedule.get('room'), dict):
-                schedule_info['roomZh'] = schedule['room'].get('nameZh', "神秘的角落")
+                schedule_info['roomZh'] = schedule['room'].get('nameZh', "Mystery Corner")
             elif isinstance(schedule.get('room'), str):
                 schedule_info['roomZh'] = schedule['room']
 
@@ -108,61 +107,81 @@ class JwcClass:
             result.append(schedule_info)
         return result
 
-    def create_sheet(self):
+class CalendarGenerator:
+    @staticmethod
+    def create_calendar(courses, exams):
         cal = Calendar()
-        cal.add('X-WR-CALNAME', '课表')
+        cal.add('X-WR-CALNAME', 'Academic Calendar')
         cal.add('X-APPLE-CALENDAR-COLOR', '#540EB9')
         cal.add('X-WR-TIMEZONE', 'Asia/Shanghai')
 
-        events = self.edit_data()
-        self.process_exam()
-
-        for exam in self.exam_list:
+        for exam in exams:
             event = Event()
-            event.add('UID', exam['time'])
-            event.add('DTSTART', exam['start'])
-            event.add('DTEND', exam['end'])
-            event.add('SUMMARY', f"{exam['course']} 考试")
-            event.add('DESCRIPTION', f"考试时间：{exam['time']}")
-            event.add('LOCATION', '考试地点：请查看教务系统')
+            event.add('UID', f"exam-{exam['course']}-{exam['start'].isoformat()}")
+            event.add('DTSTART', vDatetime(exam['start']))
+            event.add('DTEND', vDatetime(exam['end']))
+            event.add('SUMMARY', f"{exam['course']} Exam")
+            event.add('DESCRIPTION', f"Exam time: {exam['time']}")
+            event.add('LOCATION', 'Exam location: Please check the academic system')
+            
             alarm = Alarm()
             alarm.add('ACTION', 'DISPLAY')
-            alarm.add('TRIGGER', timedelta(minutes=-10))
-            alarm.add('DESCRIPTION', f"考试{exam['course']}快要开始了！")
+            alarm.add('DESCRIPTION', f"Exam {exam['course']} is about to start!")
+            alarm.add('TRIGGER', timedelta(minutes=-30))
             event.add_component(alarm)
+            
             cal.add_component(event)
 
-        for schedule in events:
+        for course in courses:
             event = Event()
-            event.add('UID', schedule['end'].isoformat())
-            event.add('DTSTART', schedule['start'])
-            event.add('DTEND', schedule['end'])
-            event.add('SUMMARY', schedule['courseName'])
-            event.add('DESCRIPTION', schedule['personName'])
-            event.add('LOCATION', schedule['roomZh'])
+            event.add('UID', f"course-{course['lessonId']}-{course['start'].isoformat()}")
+            event.add('DTSTART', vDatetime(course['start']))
+            event.add('DTEND', vDatetime(course['end']))
+            event.add('SUMMARY', course['courseName'])
+            event.add('DESCRIPTION', course['personName'])
+            event.add('LOCATION', course['roomZh'])
+            
             alarm = Alarm()
             alarm.add('ACTION', 'DISPLAY')
-            alarm.add('TRIGGER', timedelta(minutes=-10))
-            alarm.add('DESCRIPTION', f"在{schedule['roomZh']}上课的{schedule['courseName']}快要开始了！")
+            alarm.add('DESCRIPTION', f"{course['courseName']} in {course['roomZh']} is about to start!")
+            alarm.add('TRIGGER', timedelta(minutes=-15))
             event.add_component(alarm)
+            
             cal.add_component(event)
 
         return cal.to_ical()
 
+class AcademicCalendarService:
+    def __init__(self, username, password):
+        self.client = AcademicSystemClient(username, password)
+
+    def generate_calendar(self):
+        if not self.client.is_authenticated:
+            return None
+
+        self.client.fetch_courses()
+        self.client.fetch_exams()
+        courses = self.client.process_course_data()
+        self.client.process_exam_data()
+
+        return CalendarGenerator.create_calendar(courses, self.client.exams)
+
 app = Flask(__name__)
 
 @app.route('/class', methods=['GET'])
-def get_class_schedule():
+def get_academic_calendar():
     username = request.args.get('username')
-    passwd = request.args.get('passwd')
-    if not username or not passwd:
+    password = request.args.get('passwd')
+    if not username or not password:
         return "Missing username or password", 400
     
-    stu = JwcClass(username, passwd)
-    if not stu.status:
-        return "Login failed", 401
+    service = AcademicCalendarService(username, password)
+    calendar_data = service.generate_calendar()
     
-    return Response(stu.create_sheet(), mimetype='text/calendar')
+    if calendar_data is None:
+        return "Authentication failed", 401
+    
+    return Response(calendar_data, mimetype='text/calendar')
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=True,port=5001)
+    app.run(host='0.0.0.0', debug=True, port=5001)
