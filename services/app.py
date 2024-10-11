@@ -6,6 +6,7 @@ import re
 from bs4 import BeautifulSoup
 from icalendar import Calendar, Event, Alarm, vDatetime
 from flask import Flask, request, Response
+import os
 
 class AcademicSystemClient:
     BASE_URL = "https://swjw.xauat.edu.cn/student"
@@ -184,4 +185,4 @@ def get_academic_calendar():
     return Response(calendar_data, mimetype='text/calendar')
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=True, port=5001)
+    app.run(debug=True, port=os.getenv("PORT", default=5000), host='0.0.0.0')
