@@ -320,6 +320,16 @@
           height: 24px;
         }
       }
+
+      select {
+        padding: 10px;
+        margin-bottom: 15px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 16px;
+        width: 100%;
+        background-color: white;
+      }
     </style>
   </head>
   <body>
@@ -361,6 +371,12 @@
       </p>
 
       <form id="subscriptionForm">
+        <label for="school">学校:</label>
+        <select id="school" required>
+          <option value="xauat" selected>西安建筑科技大学</option>
+          <!-- Add more schools here as needed -->
+        </select>
+
         <label for="username">用户名:</label>
         <input type="text" id="username" required />
 
@@ -454,6 +470,7 @@
             e.preventDefault();
             console.log("Form submitted"); // 调试信息
 
+            const school = document.getElementById("school").value;
             const username = document.getElementById("username").value;
             const password = document.getElementById("password").value;
 
@@ -462,12 +479,15 @@
               event_category: "engagement",
               event_label: "subscription_form",
               username: username,
+              school: school,
             });
 
             const baseUrl = "schedule-backend.borry.org/class";
-            const subscriptionUrl = `webcal://${baseUrl}?username=${encodeURIComponent(
+            const subscriptionUrl = `webcal://${baseUrl}?school=${encodeURIComponent(
+              school
+            )}&username=${encodeURIComponent(
               username
-            )}&passwd=${encodeURIComponent(password)}`;
+            )}&password=${encodeURIComponent(password)}`;
 
             clickCount++;
             console.log("Click count:", clickCount); // 调试信息
