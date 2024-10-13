@@ -1,6 +1,6 @@
 # Course Calendar Subscription
 
-English | [中文](README.md)
+English | [中文](README_CN.md)
 
 ## Project Overview
 
