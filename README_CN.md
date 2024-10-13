@@ -17,6 +17,15 @@
 - 支持多种日历应用(如Google日历、Apple日历、Outlook等)
 - 实时更新，确保信息始终保持最新
 
+## 预览
+
+<div align="center">
+  <img src="web/assets/watch.png" alt="Apple Watch预览图1" width="200"/>
+  <img src="web/assets/watch2.png" alt="Apple Watch预览图2" width="200"/>
+  <img src="web/assets/preview2.png" alt="手机预览图2" width="200"/>
+  <img src="web/assets/preview.jpeg" alt="手机预览图1" width="200"/>
+</div>
+
 ## 如何使用
 
 1. 访问我们的网页应用: [calendar-subscription-app.html](https://schedule.borry.org/)

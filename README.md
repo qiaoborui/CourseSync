@@ -17,6 +17,15 @@ Currently supported schools:
 - Support for various calendar applications (such as Google Calendar, Apple Calendar, Outlook, etc.)
 - Real-time updates to ensure information is always up-to-date
 
+## Preview
+
+<div align="center">
+  <img src="web/assets/watch.png" alt="Apple Watch Preview 1" width="200"/>
+  <img src="web/assets/watch2.png" alt="Apple Watch Preview 2" width="200"/>
+  <img src="web/assets/preview2.png" alt="Mobile Preview 2" width="200"/>
+  <img src="web/assets/preview.jpeg" alt="Mobile Preview 1" width="200"/>
+</div>
+
 ## How to Use
 
 1. Visit our web application: [calendar-subscription-app.html](https://schedule.borry.org/l)
