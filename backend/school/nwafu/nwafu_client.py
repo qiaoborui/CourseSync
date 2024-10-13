@@ -9,6 +9,8 @@ from http.cookies import SimpleCookie
 
 class NWAFUAcademicSystemClient(BaseAcademicSystemClient):
     BASE_URL = "https://authserver.nwafu.edu.cn"
+    EHALL_URL = "https://newehall.nwafu.edu.cn"
+    JWAPP_URL = f"{EHALL_URL}/jwapp/sys"
 
     def __init__(self, username, password):
         self.username = username
@@ -35,9 +37,9 @@ class NWAFUAcademicSystemClient(BaseAcademicSystemClient):
         headers = {
             "Content-Type": "application/x-www-form-urlencoded"
         }
-        resp = self.session.post(f'{self.BASE_URL}/authserver/login', data=payload, headers=headers,allow_redirects=True)
+        resp = self.session.post(f'{self.BASE_URL}/authserver/login', data=payload, headers=headers, allow_redirects=True)
         self.copy_cookies_to_new_domain("authserver.nwafu.edu.cn", "newehall.nwafu.edu.cn")
-        task_url = f'https://newehall.nwafu.edu.cn/taskcenterapp/sys/taskCenter/taskNew/getMyProcessCount.do'
+        task_url = f'{self.EHALL_URL}/taskcenterapp/sys/taskCenter/taskNew/getMyProcessCount.do'
         resp = self.session.post(task_url)
         return resp.status_code == 200
 
@@ -55,16 +57,16 @@ class NWAFUAcademicSystemClient(BaseAcademicSystemClient):
             self.session.cookies.set(key, morsel.value, domain=new_domain, path='/')
 
     def get_salt_and_execution(self):
-        url = f'{self.BASE_URL}/authserver/login?service=https%3A%2F%2Fnewehall.nwafu.edu.cn%2Flogin%3Fservice%3Dhttps%3A%2F%2Fnewehall.nwafu.edu.cn%2Fywtb-portal%2FLite%2Findex.html%3Fbrowser%3Dno%23%2FcusHall'
+        url = f'{self.BASE_URL}/authserver/login?service={self.EHALL_URL}%2Flogin%3Fservice%3D{self.EHALL_URL}%2Fywtb-portal%2FLite%2Findex.html%3Fbrowser%3Dno%23%2FcusHall'
         resp = self.session.get(url)
         #  <input type="hidden" id="pwdEncryptSalt" value="66R9pzYqIdbUfGfG"/>
         soup = BeautifulSoup(resp.text, "html.parser")
         return soup.find("input", {"id": "pwdEncryptSalt"})["value"], soup.find("input", {"id": "execution"})["value"]
 
     def fetch_current_semester(self):
-        weu_url = "https://newehall.nwafu.edu.cn/jwapp/sys/funauthapp/api/getAppConfig/wdkbby-5959167891382285.do"
+        weu_url = f"{self.JWAPP_URL}/funauthapp/api/getAppConfig/wdkbby-5959167891382285.do"
         resp = self.session.get(weu_url)
-        url = "https://newehall.nwafu.edu.cn/jwapp/sys/wdkbby/modules/jshkcb/dqxnxq.do"
+        url = f"{self.JWAPP_URL}/wdkbby/modules/jshkcb/dqxnxq.do"
         resp = self.session.post(url)
         return resp.json()["datas"]["dqxnxq"]["rows"][0]["DM"]
     
@@ -75,9 +77,9 @@ class NWAFUAcademicSystemClient(BaseAcademicSystemClient):
         pass
 
     def fetch_first_week_date(self):
-        weu_url = "https://newehall.nwafu.edu.cn/jwapp/sys/funauthapp/api/getAppConfig/wdkbby-5959167891382285.do"
+        weu_url = f"{self.JWAPP_URL}/funauthapp/api/getAppConfig/wdkbby-5959167891382285.do"
         resp = self.session.get(weu_url)
-        url = "https://newehall.nwafu.edu.cn/jwapp/sys/wdkbby/modules/xskcb/cxxljc.do"
+        url = f"{self.JWAPP_URL}/wdkbby/modules/xskcb/cxxljc.do"
         """
         XN: 2024-2025
         XQ: 1
@@ -92,7 +94,7 @@ class NWAFUAcademicSystemClient(BaseAcademicSystemClient):
         return datetime.strptime(first_week_date, "%Y-%m-%d %H:%M:%S").timestamp()
 
     def fetch_courses(self):
-        url = "https://newehall.nwafu.edu.cn/jwapp/sys/wdkbby/modules/xskcb/xsdkkc.do"
+        url = f"{self.JWAPP_URL}/wdkbby/modules/xskcb/xsdkkc.do"
         payload = {
             "XNXQDM": self.current_semester,
             "*order": "-SQSJ",
@@ -101,7 +103,7 @@ class NWAFUAcademicSystemClient(BaseAcademicSystemClient):
         resp = self.session.post(url, data=payload)
         self.courses = resp.json()["datas"]["xsdkkc"]["rows"]
 
-        zhkb_url = "https://newehall.nwafu.edu.cn/jwapp/sys/wdkbby/modules/xskcb/cxxszhxqkb.do"
+        zhkb_url = f"{self.JWAPP_URL}/wdkbby/modules/xskcb/cxxszhxqkb.do"
         resp = self.session.post(zhkb_url, data=payload)
         self.courses.extend(resp.json()["datas"]["cxxszhxqkb"]["rows"])
 
