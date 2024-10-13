@@ -1,6 +1,7 @@
 import inspect
 import sys
 from school.xauat.xauat_client import XAUATAcademicSystemClient
+from school.nwafu.nwafu_client import NWAFUAcademicSystemClient
 from calendar_generator import CalendarGenerator
 from academic_system_client import BaseAcademicSystemClient
 
