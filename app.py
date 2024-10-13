@@ -7,8 +7,40 @@ from bs4 import BeautifulSoup
 from icalendar import Calendar, Event, Alarm, vDatetime
 from flask import Flask, request, Response
 import os
+from abc import ABC, abstractmethod
+import inspect
+import sys
 
-class AcademicSystemClient:
+class BaseAcademicSystemClient(ABC):
+    @abstractmethod
+    def authenticate(self):
+        pass
+
+    @abstractmethod
+    def fetch_current_semester(self):
+        pass
+
+    @abstractmethod
+    def fetch_courses(self):
+        pass
+
+    @abstractmethod
+    def fetch_exams(self):
+        pass
+
+    @abstractmethod
+    def process_exam_data(self):
+        pass
+
+    @abstractmethod
+    def fetch_course_details(self):
+        pass
+
+    @abstractmethod
+    def process_course_data(self):
+        pass
+
+class XAUATAcademicSystemClient(BaseAcademicSystemClient):
     BASE_URL = "https://swjw.xauat.edu.cn/student"
 
     def __init__(self, username, password):
@@ -89,7 +121,7 @@ class AcademicSystemClient:
                 'lessonId': schedule['lessonId'],
                 'courseName': course_dict.get(schedule['lessonId'], "Unknown Course"),
                 'personName': schedule.get('personName', "Unknown Teacher"),
-                'roomZh': "Mystery Corner",
+                'roomZh': "未知地点",
                 'date': schedule['date'],
                 'startTime': schedule['startTime'],
                 'endTime': schedule['endTime']
@@ -152,9 +184,29 @@ class CalendarGenerator:
 
         return cal.to_ical()
 
+# Factory for creating academic system clients
+class AcademicSystemClientFactory:
+    @staticmethod
+    def create_client(school, username, password):
+        # Get all classes in the current module
+        classes = inspect.getmembers(sys.modules[__name__], inspect.isclass)
+        
+        # Filter classes that inherit from BaseAcademicSystemClient
+        academic_system_clients = [
+            cls for name, cls in classes 
+            if issubclass(cls, BaseAcademicSystemClient) and cls != BaseAcademicSystemClient
+        ]
+        
+        # Find the client class for the specified school
+        for client_class in academic_system_clients:
+            if client_class.__name__.lower().startswith(school.lower()):
+                return client_class(username, password)
+        
+        raise ValueError(f"Unsupported school: {school}")
+
 class AcademicCalendarService:
-    def __init__(self, username, password):
-        self.client = AcademicSystemClient(username, password)
+    def __init__(self, school, username, password):
+        self.client = AcademicSystemClientFactory.create_client(school, username, password)
 
     def generate_calendar(self):
         if not self.client.is_authenticated:
@@ -171,18 +223,22 @@ app = Flask(__name__)
 
 @app.route('/class', methods=['GET'])
 def get_academic_calendar():
+    school = request.args.get('school', default='xauat')
     username = request.args.get('username')
-    password = request.args.get('passwd')
+    password = request.args.get('password') or request.args.get('passwd')
     if not username or not password:
         return "缺少用户名或密码", 400
     
-    service = AcademicCalendarService(username, password)
-    calendar_data = service.generate_calendar()
-    
-    if calendar_data is None:
-        return "认证失败", 401
-    
-    return Response(calendar_data, mimetype='text/calendar')
+    try:
+        service = AcademicCalendarService(school, username, password)
+        calendar_data = service.generate_calendar()
+        
+        if calendar_data is None:
+            return "认证失败", 401
+        
+        return Response(calendar_data, mimetype='text/calendar')
+    except ValueError as e:
+        return str(e), 400
 
 if __name__ == '__main__':
     app.run(debug=True, port=os.getenv("PORT", default=5000), host='0.0.0.0')
