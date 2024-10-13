@@ -96,7 +96,7 @@ class AcademicSystemClient:
             }
             
             if isinstance(schedule.get('room'), dict):
-                schedule_info['roomZh'] = schedule['room'].get('nameZh', "Mystery Corner")
+                schedule_info['roomZh'] = schedule['room'].get('nameZh', "未知地点")
             elif isinstance(schedule.get('room'), str):
                 schedule_info['roomZh'] = schedule['room']
 
@@ -112,7 +112,7 @@ class CalendarGenerator:
     @staticmethod
     def create_calendar(courses, exams):
         cal = Calendar()
-        cal.add('X-WR-CALNAME', 'Academic Calendar')
+        cal.add('X-WR-CALNAME', '课程表')
         cal.add('X-APPLE-CALENDAR-COLOR', '#540EB9')
         cal.add('X-WR-TIMEZONE', 'Asia/Shanghai')
 
@@ -121,13 +121,13 @@ class CalendarGenerator:
             event.add('UID', f"exam-{exam['course']}-{exam['start'].isoformat()}")
             event.add('DTSTART', vDatetime(exam['start']))
             event.add('DTEND', vDatetime(exam['end']))
-            event.add('SUMMARY', f"{exam['course']} Exam")
-            event.add('DESCRIPTION', f"Exam time: {exam['time']}")
-            event.add('LOCATION', 'Exam location: Please check the academic system')
+            event.add('SUMMARY', f"{exam['course']}考试")
+            event.add('DESCRIPTION', f"考试时间: {exam['time']}")
+            event.add('LOCATION', '考试地点: 请查看教务系统')
             
             alarm = Alarm()
             alarm.add('ACTION', 'DISPLAY')
-            alarm.add('DESCRIPTION', f"Exam {exam['course']} is about to start!")
+            alarm.add('DESCRIPTION', f"{exam['course']}考试即将开始！")
             alarm.add('TRIGGER', timedelta(minutes=-30))
             event.add_component(alarm)
             
@@ -144,7 +144,7 @@ class CalendarGenerator:
             
             alarm = Alarm()
             alarm.add('ACTION', 'DISPLAY')
-            alarm.add('DESCRIPTION', f"{course['courseName']} in {course['roomZh']} is about to start!")
+            alarm.add('DESCRIPTION', f"{course['courseName']}课程在{course['roomZh']}即将开始！")
             alarm.add('TRIGGER', timedelta(minutes=-15))
             event.add_component(alarm)
             
@@ -174,13 +174,13 @@ def get_academic_calendar():
     username = request.args.get('username')
     password = request.args.get('passwd')
     if not username or not password:
-        return "Missing username or password", 400
+        return "缺少用户名或密码", 400
     
     service = AcademicCalendarService(username, password)
     calendar_data = service.generate_calendar()
     
     if calendar_data is None:
-        return "Authentication failed", 401
+        return "认证失败", 401
     
     return Response(calendar_data, mimetype='text/calendar')
 
