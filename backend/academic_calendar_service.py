@@ -1,23 +1,24 @@
+import os
+import importlib
 import inspect
-import sys
-from school.xauat.xauat_client import XAUATAcademicSystemClient
-from school.nwafu.nwafu_client import NWAFUAcademicSystemClient
-from calendar_generator import CalendarGenerator
 from academic_system_client import BaseAcademicSystemClient
+from calendar_generator import CalendarGenerator
 
 class AcademicSystemClientFactory:
     @staticmethod
     def create_client(school, username, password):
-        # Get all classes in the current module
-        classes = inspect.getmembers(sys.modules[__name__], inspect.isclass)
+        client_directory = 'school'
         
-        # Filter classes that inherit from BaseAcademicSystemClient
-        academic_system_clients = [
-            cls for name, cls in classes 
-            if issubclass(cls, BaseAcademicSystemClient) and cls != BaseAcademicSystemClient
-        ]
-        
-        # Find the client class for the specified school
+        academic_system_clients = []
+        for root, dirs, files in os.walk(client_directory):
+            for file in files:
+                if file.endswith('_client.py'):
+                    module_path = os.path.join(root, file).replace('/', '.').replace('\\', '.')[:-3]
+                    module = importlib.import_module(module_path)
+                    for name, obj in inspect.getmembers(module):
+                        if inspect.isclass(obj) and issubclass(obj, BaseAcademicSystemClient) and obj != BaseAcademicSystemClient:
+                            academic_system_clients.append(obj)
+                            
         for client_class in academic_system_clients:
             if client_class.__name__.lower().startswith(school.lower()):
                 return client_class(username, password)
