@@ -1,6 +1,6 @@
 import inspect
 import sys
-from backend.school.xauat.xauat_client import XAUATAcademicSystemClient
+from school.xauat.xauat_client import XAUATAcademicSystemClient
 from calendar_generator import CalendarGenerator
 from academic_system_client import BaseAcademicSystemClient
 
