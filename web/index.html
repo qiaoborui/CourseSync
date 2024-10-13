@@ -667,6 +667,73 @@
 
       // Initialize with Chinese
       updateLanguage("zh");
+
+      function isAppleDevice() {
+        const userAgent = navigator.userAgent.toLowerCase();
+        const appleDevices = ["iphone", "ipad", "ipod", "mac"];
+        return appleDevices.some((device) => userAgent.includes(device));
+      }
+
+      function handleSubscription(event) {
+        event.preventDefault();
+        const form = document.getElementById("subscriptionForm");
+        const school = form.school.value;
+        const username = form.username.value;
+        const password = form.password.value;
+
+        if (!username || !password) {
+          showCustomAlert("请输入用户名和密码");
+          return;
+        }
+
+        const baseUrl = "https://schedule-backend.borry.org/class";
+        const subscriptionUrl = `${baseUrl}?school=${encodeURIComponent(
+          school
+        )}&username=${encodeURIComponent(
+          username
+        )}&password=${encodeURIComponent(password)}`;
+
+        if (isAppleDevice()) {
+          // 对于苹果设备，直接尝试打开 webcal 链接
+          window.location.href = subscriptionUrl.replace("https", "webcal");
+        } else {
+          // 对于其他设备，使用 fetch 下载 .ics 文件
+          fetch(subscriptionUrl)
+            .then((response) => response.blob())
+            .then((blob) => {
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.style.display = "none";
+              a.href = url;
+              a.download = "calendar.ics";
+              document.body.appendChild(a);
+              a.click();
+              window.URL.revokeObjectURL(url);
+            })
+            .catch((error) => {
+              console.error("下载日历文件时出错:", error);
+              showCustomAlert("下载日历文件时出错，请稍后重试。");
+            });
+        }
+
+        // 发送表单提交事件到 Google Analytics
+        gtag("event", "form_submission", {
+          event_category: "engagement",
+          event_label: "subscription_form",
+          username: username,
+          school: school,
+        });
+      }
+
+      // 确保在 DOM 加载完成后绑定事件处理程序
+      document.addEventListener("DOMContentLoaded", function () {
+        const form = document.getElementById("subscriptionForm");
+        if (form) {
+          form.addEventListener("submit", handleSubscription);
+        } else {
+          console.error("Subscription form not found");
+        }
+      });
     </script>
   </body>
 </html>
