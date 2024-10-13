@@ -3,7 +3,7 @@ import hashlib
 import re
 from bs4 import BeautifulSoup
 from datetime import datetime
-from academic_system_client import BaseAcademicSystemClient
+from ..base_client import BaseAcademicSystemClient
 
 class XAUATAcademicSystemClient(BaseAcademicSystemClient):
     BASE_URL = "https://swjw.xauat.edu.cn/student"

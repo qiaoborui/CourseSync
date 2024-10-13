@@ -1,7 +1,7 @@
 import os
 import importlib
 import inspect
-from academic_system_client import BaseAcademicSystemClient
+from school.base_client import BaseAcademicSystemClient
 from calendar_generator import CalendarGenerator
 
 class AcademicSystemClientFactory:

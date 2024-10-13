@@ -3,7 +3,7 @@ import hashlib
 import re
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
-from academic_system_client import BaseAcademicSystemClient
+from ..base_client import BaseAcademicSystemClient
 from .encrypt import encrypt_password
 from http.cookies import SimpleCookie
 
