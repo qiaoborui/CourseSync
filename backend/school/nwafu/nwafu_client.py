@@ -101,6 +101,10 @@ class NWAFUAcademicSystemClient(BaseAcademicSystemClient):
         resp = self.session.post(url, data=payload)
         self.courses = resp.json()["datas"]["xsdkkc"]["rows"]
 
+        zhkb_url = "https://newehall.nwafu.edu.cn/jwapp/sys/wdkbby/modules/xskcb/cxxszhxqkb.do"
+        resp = self.session.post(zhkb_url, data=payload)
+        self.courses.extend(resp.json()["datas"]["cxxszhxqkb"]["rows"])
+
     def create_class_time_map(self):
         winter_map = {
             1: ("08:00", "08:40"),
@@ -163,8 +167,8 @@ class NWAFUAcademicSystemClient(BaseAcademicSystemClient):
         for course in self.courses:
             # Determine if it's winter or summer based on the semester
             season = "winter" if int(self.current_semester[-1:]) == 1 else "summer"
-            start_number =  course["KSJC"]
-            end_number =course["JSJC"]
+            start_number = course["KSJC"]
+            end_number = course["JSJC"]
             
             start_time = self.class_time_map[season][start_number][0]
             end_time = self.class_time_map[season][end_number][1]
@@ -172,12 +176,18 @@ class NWAFUAcademicSystemClient(BaseAcademicSystemClient):
             SKZC = course["SKZC"]
             week_numbers = [i for i in range(1, len(SKZC)+1) if SKZC[i-1] == "1"]
             for week_number in week_numbers:
-                date = self.calculate_date(week_number, course["XSKXQ"])
+                # Use get() method with a default value to avoid KeyError
+                day_of_week = course.get("XSKXQ") or course.get("SKXQ")
+                if day_of_week is None:
+                    print(f"Warning: Missing day of week for course {course.get('KCM', 'Unknown')}")
+                    continue
+                
+                date = self.calculate_date(week_number, int(day_of_week))
                 course_info = {
                     "lessonId": course["XNXQDM"] + course["KCH"],
                     "courseName": course["KCM"],
-                    "personName": course["XSKJSXM"],
-                    "roomZh": course["JASDM"] if course["JASDM"] else "未知地点",
+                    "personName": course.get("XSKJSXM", course.get("SKJS")),
+                    "roomZh": course.get("JASDM", "未知地点"),
                     "startTime": start_time,
                     "endTime": end_time,
                 }
