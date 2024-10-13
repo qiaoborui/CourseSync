@@ -2,3 +2,4 @@ requests
 icalendar
 Flask
 beautifulsoup4
+pycryptodome
