@@ -28,7 +28,7 @@ Currently supported schools:
 
 ## How to Use
 
-1. Visit our web application: [calendar-subscription-app.html](https://schedule.borry.org/l)
+1. Visit our web application: [Schedule](https://schedule.borry.org/)
 2. Select your school
 3. Log in with your student account
 4. Click the "Subscribe" button
