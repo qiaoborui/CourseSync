@@ -345,6 +345,28 @@
         border-radius: 4px;
         border: 1px solid #ddd;
       }
+
+      .form-group {
+        margin-bottom: 1rem;
+      }
+
+      select.form-control {
+        width: 100%;
+        padding: 0.375rem 0.75rem;
+        font-size: 1rem;
+        line-height: 1.5;
+        color: #495057;
+        background-color: #fff;
+        border: 1px solid #ced4da;
+        border-radius: 0.25rem;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+      }
+
+      select.form-control:focus {
+        border-color: #80bdff;
+        outline: 0;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+      }
     </style>
   </head>
   <body>
@@ -405,6 +427,15 @@
 
         <label for="password" data-lang="password">密码:</label>
         <input type="password" id="password" required />
+
+        <div class="form-group">
+          <label for="filter">日历过滤选项</label>
+          <select class="form-control" id="filter">
+            <option value="">不过滤</option>
+            <option value="future">仅显示未来事件</option>
+            <option value="no_classroom">仅显示有教室的课程</option>
+          </select>
+        </div>
 
         <button type="submit" data-lang="submit">点击订阅</button>
       </form>
@@ -734,6 +765,44 @@
           console.error("Subscription form not found");
         }
       });
+
+      function generateCalendarUrl() {
+        const school = document.getElementById("school").value;
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
+        const filter = document.getElementById("filter").value;
+
+        let url = `${
+          window.location.origin
+        }/class?school=${school}&username=${username}&password=${encodeURIComponent(
+          password
+        )}`;
+
+        // 添加过滤参数（如果选择了过滤选项）
+        if (filter) {
+          url += `&filter=${filter}`;
+        }
+
+        return url;
+      }
+
+      function copyToClipboard() {
+        const url = generateCalendarUrl();
+        navigator.clipboard
+          .writeText(url)
+          .then(() => {
+            alert("订阅链接已复制到剪贴板！");
+          })
+          .catch((err) => {
+            console.error("复制失败:", err);
+            alert("复制失败，请手动复制链接");
+          });
+      }
+
+      function subscribeCalendar() {
+        const url = generateCalendarUrl();
+        window.location.href = url;
+      }
     </script>
   </body>
 </html>

@@ -3,13 +3,15 @@ from datetime import timedelta
 
 class CalendarGenerator:
     @staticmethod
-    def create_calendar(courses, exams):
+    def create_calendar(courses, exams, event_filter=None):
         cal = Calendar()
         cal.add('X-WR-CALNAME', '课程表')
         cal.add('X-APPLE-CALENDAR-COLOR', '#540EB9')
         cal.add('X-WR-TIMEZONE', 'Asia/Shanghai')
 
-        for exam in exams:
+        # Filter exams if event_filter is provided
+        filtered_exams = filter(event_filter, exams) if event_filter else exams
+        for exam in filtered_exams:
             event = Event()
             event.add('UID', f"exam-{exam['course']}-{exam['start'].isoformat()}")
             event.add('DTSTART', vDatetime(exam['start']))
@@ -26,7 +28,9 @@ class CalendarGenerator:
             
             cal.add_component(event)
 
-        for course in courses:
+        # Filter courses if event_filter is provided
+        filtered_courses = filter(event_filter, courses) if event_filter else courses
+        for course in filtered_courses:
             event = Event()
             event.add('UID', f"course-{course['lessonId']}-{course['start'].isoformat()}")
             event.add('DTSTART', vDatetime(course['start']))
