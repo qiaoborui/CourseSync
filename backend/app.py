@@ -22,7 +22,7 @@ def get_academic_calendar():
             current_time = datetime.now()
             event_filter = lambda event: event['start'] > current_time
         elif filter_type == 'no_classroom':
-            event_filter = lambda event: event['roomZh'] != '未知地点'
+            event_filter = lambda event: event.get('roomZh', '') != '未知地点'
         
         calendar_data = service.generate_calendar(event_filter)
         
