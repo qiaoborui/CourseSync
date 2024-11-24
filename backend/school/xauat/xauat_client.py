@@ -65,7 +65,7 @@ class XAUATAcademicSystemClient(BaseAcademicSystemClient):
                 course_name = exam['course']['nameZh']
                 exam_time = exam['examGroup']['examTime']['dateTimeString']
                 room = exam['examPlace']['room']['nameZh'] if exam['examPlace'].get('room') else "未知地点"
-                seat_no = exam['alphabetSeatNo']
+                seat_no = exam['seatNo'] if exam['seatNo'] else "未知座位号"
                 self.exams.append({
                     'course': course_name,
                     'time': exam_time,
