@@ -18,7 +18,7 @@ class CalendarGenerator:
             event.add('DTEND', vDatetime(exam['end']))
             event.add('SUMMARY', f"{exam['course']}考试")
             event.add('DESCRIPTION', f"考试时间: {exam['time']}")
-            event.add('LOCATION', '考试地点: 请查看教务系统')
+            event.add('LOCATION', f"教室: {exam['room']} 座位号: {exam['seat_no']}")
             
             alarm = Alarm()
             alarm.add('ACTION', 'DISPLAY')

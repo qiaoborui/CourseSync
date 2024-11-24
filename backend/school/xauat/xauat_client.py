@@ -1,6 +1,7 @@
 import requests
 import hashlib
 import re
+import json
 from bs4 import BeautifulSoup
 from datetime import datetime
 from ..base_client import BaseAcademicSystemClient
@@ -45,15 +46,34 @@ class XAUATAcademicSystemClient(BaseAcademicSystemClient):
         url = f"{self.BASE_URL}/for-std/exam-arrange"
         try:
             resp = self.session.get(url).text
-            soup = BeautifulSoup(resp, 'html.parser')
-            table = soup.find('table', id='exams')
+            # 使用更精确的正则表达式匹配
+            match = re.search(r'var\s+studentExamInfoVms\s*=\s*(\[[\s\S]*?\]);', resp)
+            if not match:
+                return False
+            
+            # 清理JSON字符串 - 替换单引号为双引号
+            json_str = match.group(1).replace("'", '"')
+            # 处理JavaScript中的undefined值
+            json_str = re.sub(r':\s*undefined\b', ': null', json_str)
+            # 处理末尾的逗号
+            json_str = re.sub(r',(\s*[}\]])', r'\1', json_str)
+            
+            exam_data = json.loads(json_str)
             self.exams = []
-            for row in table.find_all('tr')[1:]:
-                cols = row.find_all('td')
-                course = cols[0].text.strip()
-                time = cols[1].text.strip()
-                self.exams.append({'course': course, 'time': time})
+            
+            for exam in exam_data:
+                course_name = exam['course']['nameZh']
+                exam_time = exam['examGroup']['examTime']['dateTimeString']
+                room = exam['examPlace']['room']['nameZh'] if exam['examPlace'].get('room') else "未知地点"
+                seat_no = exam['alphabetSeatNo']
+                self.exams.append({
+                    'course': course_name,
+                    'time': exam_time,
+                    'room': room,
+                    'seat_no': seat_no,
+                })
             return True
+        
         except Exception as e:
             print(f"Failed to fetch exam schedule: {e}")
             return False
